@@ -1,24 +1,27 @@
-# CalcBinarn-visual-studio-1
-Console application for transfer to any of the number systems
+Base Numeral System Calculator
 
-# Binary Calculator
+A console calculator capable of:
 
-Калькулятор двійкової системи.
+• reading numbers in arbitrary numeral systems
+• converting them into decimal
+• performing arithmetic operations
+• converting the result back to the selected numeral system
 
-## Purpose
+Features
 
-Практика роботи з системами числення.
+✔ Bases 2–36
+✔ Addition
+✔ Subtraction
+✔ Multiplication
+✔ Division
+✔ Signed integers
 
-## Features
+Technologies
 
-- binary
-- decimal
-- conversion
+• C++17
+• Standard Library
 
-## Technologies
+Status
 
-C++
-
-## Status
-
-Completed
+Archived educational project.
+Originally created during university studies and later cleaned up for public GitHub portfolio.
