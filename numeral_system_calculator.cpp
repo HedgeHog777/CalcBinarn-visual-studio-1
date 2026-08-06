@@ -1,123 +1,164 @@
 #include <iostream>
+#include <string>
+#include <stdexcept>
+#include <cstdint>
 
-#define BASE_TYPE long int
-#define BASE_SIZE 32
-#define DOUBLE_TYPE long long int
-#define DOUBLE_SIZE (BASE_NUM * 2)
-#define NUM_SYS_TYPE unsigned short
+using BaseType = std::int64_t;
+using ResultType = std::int64_t;
+using NumeralSystem = std::uint16_t;
 
-using std::cin;
-using std::cout;
-using std::endl;
-using std::string;
-using std::size_t;
+BaseType charToNumber(char c, NumeralSystem base);
+BaseType stringToNumber(const std::string& str, NumeralSystem base);
 
-BASE_TYPE charToNumber(const char c, const NUM_SYS_TYPE num_sys) {
-    BASE_TYPE result;
-    if (('0' <= c) && (c <= '9')) {
+char numberToChar(BaseType value);
+std::string numberToString(ResultType value, NumeralSystem base);
+
+BaseType readNumber();
+
+BaseType charToNumber(char c, NumeralSystem base)
+{
+    BaseType result = -1;
+
+    if (c >= '0' && c <= '9')
         result = c - '0';
-    }
-    else if (('A' <= c) && (c <= 'Z')) {
+    else if (c >= 'A' && c <= 'Z')
         result = c - 'A' + 10;
-    }
-    else if (('a' <= c) && (c <= 'z')) {
+    else if (c >= 'a' && c <= 'z')
         result = c - 'a' + 10;
-    }
-    
-    if ((result >= num_sys) || (result < 0)) {
-        cout << endl << "Wrong input " << c << " num_sys " << num_sys
-            << " => " << result << endl;
-        result = 0;
-    }
+
+    if (result < 0 || result >= base)
+        throw std::invalid_argument("Invalid digit for selected numeral system.");
+
     return result;
 }
 
-BASE_TYPE stringToNumber(const string& str, const NUM_SYS_TYPE num_sys) {
-    BASE_TYPE sign = 2 * (str[0] != '-') - 1; // -1 or 1
-    size_t start = (str[0] == '-') + (str[0] == '+'); //  1 or 0
-    
-    BASE_TYPE mult = 1;
-    BASE_TYPE result = 0;
-    for (size_t i = start; i < str.size(); i++) {
-        result *= mult;
-        result += charToNumber(str[i], num_sys);
-        mult = num_sys;
+
+BaseType stringToNumber(const std::string& str, NumeralSystem base)
+{
+    BaseType sign = (str[0] == '-') ? -1 : 1;
+    std::size_t start = (str[0] == '-' || str[0] == '+') ? 1 : 0;
+
+    BaseType result = 0;
+
+    for (std::size_t i = start; i < str.size(); ++i)
+    {
+        result *= base;
+        result += charToNumber(str[i], base);
     }
+
     return sign * result;
 }
 
-char numberToChar(const BASE_TYPE number)
+char numberToChar(BaseType number)
 {
-    if ((0 <= number) && (number <= 9)) {
-        return number + '0';
-    }
-    else if ((10 <= number) && (number <= 10 + ('Z' - 'A'))) {
-        return number + 'A' - 10;
-    }
-    cout << "Wrong number to char " << number << endl;
-    return 'x';
+    if (number >= 0 && number <= 9)
+        return static_cast<char>('0' + number);
+
+    if (number >= 10 && number < 36)
+        return static_cast<char>('A' + number - 10);
+
+    throw std::invalid_argument("Cannot convert number to character.");
 }
 
-string numberToString(DOUBLE_TYPE number, const NUM_SYS_TYPE num_sys) {
-    BASE_TYPE digit;
-    string reversed, result;
-    if (number < 0) {
+std::string numberToString(ResultType number, NumeralSystem base)
+{
+    BaseType digit;
+    std::string reversed;
+    std::string result;
+
+    if (number < 0)
+    {
         result = '-';
         number = -number;
-    } else if (number == 0) {
+    }
+    else if (number == 0)
+    {
         return "0";
     }
-    
-	while (number > 0) {
-	    digit = number % num_sys;
-	    reversed += numberToChar(digit);
-	    number /= num_sys;
-	}
-	for (size_t i = reversed.size(); i > 0; i--) {
-	    result += reversed[i-1];
-	}
-	return result;
+
+    while (number > 0)
+    {
+        digit = number % base;
+        reversed += numberToChar(digit);
+        number /= base;
+    }
+
+    for (std::size_t i = reversed.size(); i > 0; --i)
+        result += reversed[i - 1];
+
+    return result;
 }
 
-BASE_TYPE readNumber() {
-    string input;
-    cout << endl << "Input number as string: ";
-    cin >> input;
-    int num_sys;
-    cout << endl << "Input numeral system: ";
-    cin >> num_sys;
-    return stringToNumber(input, num_sys);
-}
+BaseType readNumber()
+{
+    std::string input;
 
+    std::cout << "\nInput number: ";
+    std::cin >> input;
+
+    NumeralSystem base;
+
+    std::cout << "Input numeral system (2-36): ";
+    std::cin >> base;
+
+    if (base < 2 || base > 36)
+        throw std::invalid_argument("Numeral system must be between 2 and 36.");
+
+    return stringToNumber(input, base);
+}
 int main()
 {
-    BASE_TYPE a = readNumber();
-    cout << endl << "a = " << a;
-    BASE_TYPE b = readNumber();
-    cout << endl << "b = " << b;
-    
-    char operation;
-    cout << endl << "Choose operation from +-*/ ";
-    cin >> operation;
-    int num_sys;
-    cout << endl << "Choose output numeral system: ";
-    cin >> num_sys;
-    
-    DOUBLE_TYPE result;
-    switch (operation) {
-		case '+':
-		    result = a + b;
-		    break;
-		case '-':
-		    result = a - b;
-		    break;
-		case '*':
-               result = a * b;
-               break;
-        case '/':
-               result = a / b;
-               break;
+    try
+    {
+        BaseType a = readNumber();
+        BaseType b = readNumber();
+
+        char operation;
+
+        std::cout << "\nChoose operation (+ - * /): ";
+        std::cin >> operation;
+
+        NumeralSystem outputBase;
+
+        std::cout << "\nOutput numeral system: ";
+        std::cin >> outputBase;
+
+        ResultType result = 0;
+
+        switch (operation)
+        {
+            case '+':
+                result = a + b;
+                break;
+
+            case '-':
+                result = a - b;
+                break;
+
+            case '*':
+                result = a * b;
+                break;
+
+            case '/':
+                if (b == 0)
+                    throw std::runtime_error("Division by zero.");
+
+                result = a / b;
+                break;
+
+            default:
+                throw std::runtime_error("Unknown operation.");
+        }
+
+        std::cout << "\nResult = "
+                  << numberToString(result, outputBase)
+                  << '\n';
     }
-    cout << endl << "Result = " << numberToString(result, num_sys);
-    return 0;
+    catch (const std::exception& e)
+    {
+        std::cerr << "\nError: " << e.what() << '\n';
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
